@@ -1,36 +1,63 @@
-import os
 import flask
 import json
-import sys
 
 PING_ACTION = 'ping'
 GAME_START_ACTION = 'game_start'
 TURN_ACTION = 'turn'
 GAME_OVER_ACTION = 'game_over'
 
-def turn(map):
-    # This is where you put you logic.  Use the map object to figure out
-    # what you want to do and return a list of orders that are hashes that
-    # look like this:
-    # {'from': node_id, 'to': other_node_id, 'number_of_soldiers': num}
+# Welcome to AI Showdown #2 -- Berlin-AI
+# What you have here is the Python example bot.  You should be following the
+# Quick-start instructions that were also available on the website and
+# walk you through the set-up that goes along with this module.
+#
+# Of course, you are not required to use this example if you would prefer
+# to do something else, but hopefully this is the fastest way to get up
+# and running.
+#
+# This function is where you put your bot's logic.
+#   action: One of the above four "actions" that the game server can send
+#   map:    An instance of a Map object created from the details of the
+#           current game state.  See the class below for details on how
+#           to use it.
+# Use the map object to figure out what you want to do and return a list
+# of orders that are hashes that look like this:
+# {'from': node_id, 'to': other_node_id, 'number_of_soldiers': num}
+#
+# In this example, the bot iterates through each node that is under its control
+# and checks their adjacent nodes.  It then splits up the soldiers evenly among
+# the adjacent nodes to spread out the troops.
+# Obviously there is much improvement to be made here, but that's your job :)
+def game_logic(action, map):
+    """ Take in a current game state and return a list of orders """
+    if action == PING_ACTION:
+        return json.dumps([])
 
     orders = []
     my_nodes = map.NodesControlledByMe()
 
-    print "num = %s" % len(my_nodes)
     for node_id in my_nodes:
         n = map.GetNode(node_id)
+
         adj_nodes = map.AdjacentNodes(node_id)
         pop = n.get('population', 0)
-        to_attack = [n for n in adj_nodes if (not n in my_nodes
-                                              or map.GetNode(n).get('population', 0) < pop)]
-        for dest_node_id in to_attack:
-            orders.append({'from': node_id, 'to': dest_node_id,
-                           'number_of_soldiers': int(pop / len(to_attack))})
 
-    return orders
+        for dest_node_id in adj_nodes:
+            orders.append({'from': node_id, 'to': dest_node_id,
+                           'number_of_soldiers': int(pop / len(adj_nodes))})
+
+    return json.dumps(orders)
 
 class Map:
+    """ A class to represent the current state of the game.  It is created by
+    copying in the data sent by the server and provides several convenience
+    functions that should help make connections between the nodes, troops,
+    etc.  Feel free to modify these functions, add more, etc.
+
+    If you think you've added a particularly useful feature, it might be cool
+    to post it to the forum at forum.aishowdown.com for everyone to use.
+    If you're feeling generous, that is ;)
+    """
     def __init__(self, infos_data, map_data, state_data):
         self.infos = infos_data if infos_data else {}
         self.player_id = self.infos.get('player_id', None)
@@ -43,10 +70,12 @@ class Map:
         self.paths = map_data.get('paths', None)
 
     def IsValid(self):
+        """ Detect if some parts of the data were missing when it was created """
         return bool(self.types and self.nodes and self.paths and
                     self.infos and self.state)
 
     def GetType(self, node_type):
+        """ Return the details of node for a given node_type name """
         if not self.types:
             return None
         matching_types = [t for t in self.types
@@ -72,7 +101,6 @@ class Map:
                 state = self.__GetState(node_id)
                 if not state:
                     continue
-
                 return {'id': node_id, 'type': node_type,
                         'points_per_turn': type_details.get('points', None),
                         'soldiers_per_turn': type_details.get('number_of_soldiers', None),
@@ -118,9 +146,6 @@ class Map:
         """ Returns a list of the node id's of all the nodes you control """
         if not self.IsValid():
             return []
-
-        print self.player_id
-        print self.state
         return [n.get('node_id', None) for n in self.state
                 if n.get('player_id', None) == self.player_id]
 
@@ -136,22 +161,19 @@ def bot(path):
     # There are unfortunately a couple of different ways the server will
     # respond, however this should handle all of them transparently so
     # you don't have to worry about it.
-
-    #BUT WHICH ONE IS RIGHT (copy bots will need to know)
-    if flask.request.data:  #This one gets call when the request is in the body
+    if flask.request.data:
         json_request = json.loads(flask.request.data)
         infos_data = json_request.get('infos', None)
         map_data = json_request.get('map', None)
         state_data = json_request.get('state', None)
         action = json_request.get('action', None)
-    elif flask.request.form: #This one gets called when the request is in form_data
+    elif flask.request.form:
         json_request = flask.request.form
         infos_data = json.loads(json_request.get('infos', None))
         map_data = json.loads(json_request.get('map', None))
         state_data = json.loads(json_request.get('state', None))
         action = json_request.get('action', None)
-    elif flask.request.args: #This one gets called when it's urlencoded
-        sys.stderr.write(str(flask.request.args))
+    elif flask.request.args:
         infos_data = json.loads(flask.request.args.get('infos', None))
         map_data = json.loads(flask.request.args.get('map', None))
         state_data = json.loads(flask.request.args.get('state', None))
@@ -159,14 +181,6 @@ def bot(path):
     else:
         return 'Sorry, no data recieved'
 
-    if action == PING_ACTION:
-        return json.dumps([])
-
-
     map = Map(infos_data, map_data, state_data)
 
-    orders = turn(map)
-    return json.dumps(orders)
-
-
-app.run()
+    return game_logic(action, map)
