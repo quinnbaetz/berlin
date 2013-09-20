@@ -163,9 +163,9 @@ def bot(path):
     # you don't have to worry about it.
     if flask.request.data:
         json_request = json.loads(flask.request.data)
-        infos_data = json.loads(json_request.get('infos', None))
-        map_data = json.loads(json_request.get('map', None))
-        state_data = json.loads(json_request.get('state', None))
+        infos_data = json_request.get('infos', None)
+        map_data = json_request.get('map', None)
+        state_data = json_request.get('state', None)
         action = json_request.get('action', None)
     elif flask.request.form:
         json_request = flask.request.form
@@ -180,6 +180,10 @@ def bot(path):
         action = flask.request.args.get('action', None)
     else:
         return 'Sorry, no data recieved'
+
+    infos_data = infos_data if type(infos_data) == dict else json.loads(infos_data)
+    map_data = map_data if type(map_data) == dict else json.loads(map_data)
+    state_data = state_data if type(state_data) == dict else json.loads(state_data)
 
     map = Map(infos_data, map_data, state_data)
 
