@@ -201,15 +201,16 @@ class Game:
 
                 self.INFOS['player_id'] = int(player.id)
 
+                #TODO: maybe make asyncroun
                 responses.append(player.send_data({
-                    "action" : json.dumps(action), #action,   to make it work like their server
-                    "infos" : json.dumps(self.INFOS), #self.INFOS,
+                    "action" : action, #action,   to make it work like their server
+                    "infos" : json.dumps(self.INFOS, separators=(',', ': ')), #self.INFOS,
                     "map" : json.dumps({
                         "types" : self.MAPDATA['map']['representation']['types'],
                         "nodes" : self.MAPDATA['map']['representation']['nodes'],
                         "paths" : self.MAPDATA['map']['representation']['paths']
-                    }),
-                    "state" : json.dumps(self.build_state()) #self.build_state()
+                    }, separators=(',', ': ')),
+                    "state" : json.dumps(self.build_state(), separators=(',', ': ')) #self.build_state()
                 }, self.TIME_LIMIT));
 
                 #responses.append(player.send_data({
