@@ -20,29 +20,31 @@ class NetworkPlayer():
         jsonmap = json.dumps(obj);
 
         #PUTS IN DATA
-        #try:
-        #    req = urllib2.Request("http://127.0.0.1:"+self.port)
-        #    req.add_data(jsonmap)
-        #    req.add_header('Content-Type', 'application/json')
-##
-        #    response = urllib2.urlopen(req, timeout=(timeout/1000))
-        #    ret = json.load(response)
-        #except:
-        #    print "failed to load json from %s on port %s " % (self.id, self.port)
-        #    return
+        try:
+            req = urllib2.Request("http://127.0.0.1:"+self.port)
+            req.add_data(jsonmap)
+            req.add_header('Content-Type', 'application/json')
+            response = urllib2.urlopen(req, timeout=(timeout/1000))
+            ret = json.load(response)
+        except Exception as e:
+            print "failed to load json from %s on port %s " % (self.id, self.port)
+            print e
+            return
 
 
 
         #PUTS IT IN ARGS - switch to otehr encoder
-        try:
-            req = urllib2.Request("http://127.0.0.1:"+self.port+"?"+urllib.urlencode(obj))
-            req.add_header('Content-Type', 'application/json')
-            req.get_method = lambda: 'POST'
-            response = urllib2.urlopen(req, timeout=(timeout/1000))
-            ret = json.load(response)
-        except:
-            print "failed to load json from %s on port %s " % (self.id, self.port)
-            return
+        #try:
+        #    url = "http://127.0.0.1:"+self.port+"/?"+urllib.urlencode(obj)
+        #    req = urllib2.Request(url)
+        #    req.add_header('Content-Type', 'application/json')
+        #    req.get_method = lambda: 'POST'
+        #    response = urllib2.urlopen(req, timeout=(timeout/1000))
+        #    ret = json.load(response)
+        #except Exception as e:
+        #    print "failed to load json from %s on port %s " % (self.id, self.port)
+        #    print e
+        #    return
 
 
         #PUTS IT IN FORM DATA

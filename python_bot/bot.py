@@ -163,9 +163,9 @@ def bot(path):
     # you don't have to worry about it.
     if flask.request.data:
         json_request = json.loads(flask.request.data)
-        infos_data = json_request.get('infos', None)
-        map_data = json_request.get('map', None)
-        state_data = json_request.get('state', None)
+        infos_data = json.loads(json_request.get('infos', None))
+        map_data = json.loads(json_request.get('map', None))
+        state_data = json.loads(json_request.get('state', None))
         action = json_request.get('action', None)
     elif flask.request.form:
         json_request = flask.request.form
@@ -174,9 +174,9 @@ def bot(path):
         state_data = json.loads(json_request.get('state', None))
         action = json_request.get('action', None)
     elif flask.request.args:
-        infos_data = json.loads(flask.request.args.get('infos', None))
-        map_data = json.loads(flask.request.args.get('map', None))
-        state_data = json.loads(flask.request.args.get('state', None))
+        infos_data = flask.request.args.get('infos', None)
+        map_data = flask.request.args.get('map', None)
+        state_data = flask.request.args.get('state', None)
         action = flask.request.args.get('action', None)
     else:
         return 'Sorry, no data recieved'
